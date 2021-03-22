@@ -1,0 +1,6 @@
+---
+- hosts: consul_nomad_server
+  become: yes
+  roles:
+    - name: base
+    - name: consul

@@ -1,0 +1,23 @@
+---
+- hosts: consul_nomad_server
+  become: yes
+  roles:
+    - name: docker
+    - name: nomad
+
+- hosts: consul_nomad_client
+  become: yes
+  roles:
+    - name: base
+    - name: consul
+    - name: docker
+    - name: nomad
+
+
+- hosts: loadbalancer
+  become: yes
+  roles:
+    - name: base
+    - name: consul
+    - name: traefik
+

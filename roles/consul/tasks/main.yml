@@ -1,0 +1,103 @@
+---
+- name: Create temporary download directory if it does not exist
+  delegate_to: localhost
+  run_once: true
+  become: no
+  file:
+    path: "{{ playbook_dir }}/.ansible_download_cache"
+    state: directory
+    mode: 0755
+
+- name: Download Consul and verify SHA256 checksum
+  delegate_to: localhost
+  run_once: true
+  become: no
+  get_url:
+    url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
+    dest: "{{ playbook_dir }}/.ansible_download_cache/consul_{{ consul_version }}_linux_amd64.zip"
+    checksum: "sha256:https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_SHA256SUMS"
+
+- name: Extract Consul
+  unarchive:
+    src: "{{ playbook_dir }}/.ansible_download_cache/consul_{{ consul_version }}_linux_amd64.zip"
+    dest: /usr/bin
+
+- name: Create consul user
+  user:
+    name: consul
+    home: /etc/consul.d
+    system: yes
+    shell: /usr/bin/false
+    state: present
+
+- name: Create data directory
+  file:
+    path: /opt/consul
+    state: directory
+    owner: consul
+    group: consul
+    mode: 0755
+
+- name: Copy config
+  template:
+    src: "consul.hcl.j2"
+    dest: "/etc/consul.d/consul.hcl"
+    owner: consul
+    group: consul
+    mode: 0644
+
+- name: Copy systemd service
+  template:
+    src: "consul.service.j2"
+    dest: "/etc/systemd/system/consul.service"
+    mode: 0644
+
+- block:
+    - name: Disable systemd-resolved service
+      systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+
+    - name: Set nameserver to localhost
+      copy:
+        content: 'nameserver 127.0.0.1'
+        dest: /etc/resolv.conf
+  when: consul_dns
+
+- block:
+    - name: Install dnsmasq
+      package:
+        name: dnsmasq
+
+    - name: Configure dnsmasq
+      copy:
+        content: |
+          server=/consul/127.0.0.1#8600
+          server=8.8.8.8
+        dest: /etc/dnsmasq.d/10-consul.conf
+
+#    - name: Set nameserver to public
+#      copy:
+#        content: 'nameserver 127.0.0.1'
+#        dest: /etc/resolv.conf
+
+    - name: Disable systemd-resolved service
+      systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: yes
+
+    - name: Start dnsmasq
+      systemd:
+        name: dnsmasq
+        state: started
+        enabled: yes
+  when: not consul_dns
+
+- name: Start consul service
+  systemd:
+    name: consul
+    state: restarted
+    daemon_reload: yes
+    enabled: yes

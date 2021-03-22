@@ -1,0 +1,22 @@
+---
+domain: test
+
+consul_version: "1.9.4"
+nomad_version: "1.0.4"
+vault_version: "1.6.3"
+coredns_version: "1.8.3"
+traefik_version: "2.4.7"
+
+consul_dns: false
+
+# If multiple network interfaces exist in the VM, specify the one matching
+# the IP range defined in Vagrant.
+network_interface: enp0s8
+
+# Set interface manually (see above) or fall back to default IPv4 address.
+network_interface_ipv4: "{{ hostvars[inventory_hostname]['ansible_' + network_interface]['ipv4']['address'] | default(hostvars[inventory_hostname]['ansible_default_ipv4']['address']) }}"
+
+loadbalancer_ip: "{{ vagrant_loadbalancer_ip | default(hostvars['loadbalancer']['ansible_host']) }}"
+consul_nomad_server_ips: "{{ vagrant_consul_nomad_server_ips | default(groups['consul_nomad_server'] | map('extract', hostvars, 'ansible_host') | list) }}"
+
+

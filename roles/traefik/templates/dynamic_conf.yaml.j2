@@ -1,0 +1,17 @@
+# Dynamic configuration
+http:
+  routers:
+    api:
+      rule: "Host(`traefik.{{ domain }}`)"
+      service: "api@internal"
+      entrypoints: "web"
+    consul:
+      rule: "Host(`consul.{{ domain }}`)"
+      service: "consul"
+      entrypoints: "web"
+
+  services:
+    consul:
+      loadBalancer:
+        servers:
+          - url: "http://consul.service.consul:8500"
