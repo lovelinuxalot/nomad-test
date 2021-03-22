@@ -3,8 +3,6 @@ domain: test
 
 consul_version: "1.9.4"
 nomad_version: "1.0.4"
-vault_version: "1.6.3"
-coredns_version: "1.8.3"
 traefik_version: "2.4.7"
 
 consul_dns: false

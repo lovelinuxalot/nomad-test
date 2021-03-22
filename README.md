@@ -2,7 +2,7 @@
 
 This project describes on how to setup a simple Cluster for running workloads.
 
-**NOTE** This is not intended for a production cluster. Only for learning and testing purposes
+**NOTE:** This is not intended for a production cluster. Only for learning and testing purposes
 
 ## Overview
 
@@ -14,10 +14,6 @@ Following tools are deployed with this project
 
 [Nomad](https://nomadproject.io/) Cluster Orchestration and running workloads. The Nomad cluster is configured to use Docker Task driver to run containerized workloads
 
-An example deployment configuration for each is included in this setup.
-
-<br clear="both"><br>
-
 ## Setup
 
 ### Prerequisites
@@ -25,7 +21,7 @@ An example deployment configuration for each is included in this setup.
 You need three components to get the setup running:
 
 1. [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-2. [Vagrant](https://www.vagrantup.com/downloads.html) <sup id="a1">[1](#f1)</sup>
+2. [Vagrant](https://www.vagrantup.com/downloads.html)
 3. [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
 
@@ -37,7 +33,7 @@ Also your host system needs at least 6GB of RAM available and about 20GB of free
 1. **Clone this Git repository:**
 
    ```sh
-   git clone --depth=1 https://github.com/fhemberger/nomad-test.git
+   git clone https://github.com/lovelinuxalot/nomad-test
    cd nomad-test
    ```
 
@@ -126,7 +122,7 @@ Once Step 2 is completed, we can add jobs to Nomad. To run job from CLI,
 
 #### Running jobs from the UI
 
-1. A single example application is only included with this demo: [`hello-world-docker.nomad`](nomad_jobs/hello-world-docker.nomad)
+1. A single example application is only included with this demo: [`hello-world-docker.nomad`](nomad_jobs/hello-world-docker.nomad). So you can use the same one with different job names. 
 2. Go to http://nomad.test/ui/jobs/run
 3. Copy and paste the job content into the editor. Change the name of the service to have a different job name and click "Plan".
 4. Nomad performs a syntax check by dry-running the job on the scheduler without applying the changes yet. If you change settings in your job file later on, this step will also show a diff of all the changes (e.g. number of instances):
@@ -144,6 +140,29 @@ Dead/completed jobs are cleaned up in accordance to the garbage collection inter
 vagrant ssh consul-nomad-client1 -c 'curl -X PUT http://localhost:4646/v1/system/gc'
 ```
 
+## Ansible Playbook Vars
+|Variable name | Description| Default|
+|---|---|---|
+|`domain`| The domain name to use for services| `test`| 
+|`consul_version`| The Version of Consul to install|`1.9.4`|
+|`nomad_version`| The Version of Nomad to install |`1.0.4`|
+|`traefik_version`| The Version of Traefik to install |`2.4.7`|
+|`consul_dns`|Run Consul DNS on 53. Else use `dnsmasq `|`false`|
+|`network_interface`| The network interface to use |`enp0s8`|
+|`network_interface_ipv4`| The Ip address of the network interface from `network_interface`| From `ansible_facts`|
+|`loadbalancer_ip`| The IP address of the loadbalancer.| From `vagrant` and `ansible_facts`|
+|`consul_nomad_server_ips`| The IP addresses of server nodes | From `vagrant` and `ansible_facts`|
+|`consul_is_server`| To set a consul node as server | `false`|
+|`nomad_is_client`| To set nomad node as client | `false`|
+|`nomad_is_server`|To set nomad node as server | `true`|
+
+## Ansible Playbooks
+- `playbook-consul.yml`: 
+  - Setup base, consul roles on Server nodes
+- `playbook.yml`: 
+  - Setup docker, nomad roles on Server nodes,
+  - Setup base, consul, docker, nomad roles on Client nodes
+
 ## On Security
 
 For this demo I tried to keep the setup simple. This is kind of like development mode setup. So somethings to take into consideration when moving forward,
@@ -154,3 +173,9 @@ For this demo I tried to keep the setup simple. This is kind of like development
 - Proper firewall rules with a deny all approach and allow only required traffic
 - Nomad workloads should be properly designed to make the job itself secure
 
+## Notes
+
+- Consul and Traefik is running separately as services and not inside Nomad as jobs, because I thought if Nomad goes down all of them goes down
+- 3 master nodes for cluster to avoid split-brain problems
+- 2 agent nodes to test failover for jobs
+- Consul DNS is good to use to run on 53, but it is not recommended to use it. So I use `dnsmasq` for dns 
