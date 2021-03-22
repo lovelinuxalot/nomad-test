@@ -144,14 +144,6 @@ Dead/completed jobs are cleaned up in accordance to the garbage collection inter
 vagrant ssh consul-nomad-client1 -c 'curl -X PUT http://localhost:4646/v1/system/gc'
 ```
 
-
-## Taking it further
-
-Dive deeper into the [Job specification](https://nomadproject.io/docs/job-specification/): learn about the [`artifact`](https://nomadproject.io/docs/job-specification/artifact/), [`template`](https://nomadproject.io/docs/job-specification/template/) and [`volume`](https://nomadproject.io/docs/job-specification/volume/) stanzas to add config files and storage to your jobs. Starting 0.11 beta, Nomad also supports [Container Storage Interface (CSI)](https://www.hashicorp.com/blog/hashicorp-nomad-container-storage-interface-csi-beta/).
-
-You can launch jobs that claim storage volumes from AWS Elastic Block Storage (EBS) or Elastic File System (EFS) volumes, GCP persistent disks, Digital Ocean droplet storage volumes, Ceph, vSphere, or vendor-agnostic third-party providers like Portworx. This means that the same plugins written by storage providers to support Kubernetes also support Nomad out of the box.
-
-
 ## On Security
 
 For this demo I tried to keep the setup simple. This is kind of like development mode setup. So somethings to take into consideration when moving forward,
@@ -161,3 +153,4 @@ For this demo I tried to keep the setup simple. This is kind of like development
 - TLS communication should be setup for encrypted communications
 - Proper firewall rules with a deny all approach and allow only required traffic
 - Nomad workloads should be properly designed to make the job itself secure
+
