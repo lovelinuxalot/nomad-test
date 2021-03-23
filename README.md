@@ -8,7 +8,7 @@ This project describes on how to setup a simple Cluster for running workloads.
 
 Following tools are deployed with this project
 
-[Traefik](https://docs.traefik.io/): Load balancer using Consul Catalog service discovery. All services registered in Consul with the tag `http` will be exposed as `<service name>.test`. In context of this test setup, you'll have to adjust your `/etc/hosts` file accordingly ([see below](#user-content-etc-hosts)).
+[Traefik](https://docs.traefik.io/): Load balancer using Consul Catalog service discovery. All services registered in Consul with the tag `http` will be exposed as `<service name>.test`. In context of this test setup, you'll have to adjust your `/etc/hosts` file accordingly.
 
 [Consul](https://consul.io/): Service Discovery and Service Configuration. All services are registered here and is availale as `<service-name>.service.consul`
 
@@ -163,6 +163,18 @@ vagrant ssh consul-nomad-client1 -c 'curl -X PUT http://localhost:4646/v1/system
   - Setup docker, nomad roles on Server nodes,
   - Setup base, consul, docker, nomad roles on Client nodes
 
+## Notes
+
+- Consul and Traefik is running separately as services and not inside Nomad as jobs, because I thought if Nomad goes down all of them goes down
+- 3 master nodes for cluster to avoid split-brain problems
+- 2 agent nodes to test failover for jobs
+- Consul DNS is good to use to run on 53, but it is not recommended to use it. So I use `dnsmasq` for dns
+
+## Some issues encountered
+- When running the bash script which runs the whole deployment, I faced this issue
+  `msg: 'Failed to download key at https://download.docker.com/linux/ubuntu/gpg: Request failed: <urlopen error [Errno -3] Temporary failure in name resolution>'`
+  Rerunning the bash script will fix the issue
+  
 ## On Security
 
 For this demo I tried to keep the setup simple. This is kind of like development mode setup. So somethings to take into consideration when moving forward,
@@ -173,9 +185,3 @@ For this demo I tried to keep the setup simple. This is kind of like development
 - Proper firewall rules with a deny all approach and allow only required traffic
 - Nomad workloads should be properly designed to make the job itself secure
 
-## Notes
-
-- Consul and Traefik is running separately as services and not inside Nomad as jobs, because I thought if Nomad goes down all of them goes down
-- 3 master nodes for cluster to avoid split-brain problems
-- 2 agent nodes to test failover for jobs
-- Consul DNS is good to use to run on 53, but it is not recommended to use it. So I use `dnsmasq` for dns 
